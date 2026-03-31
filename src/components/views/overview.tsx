@@ -14,7 +14,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { DateRange } from "@/lib/data";
-import { getKPIs, getReps, getFlags, getLeadSources, getQuotePipeline } from "@/lib/data";
+import { getKPIs, getReps, getFlags, getLeadSources, getQuotePipeline, getLeadLogs } from "@/lib/data";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   users: Users,
@@ -53,6 +53,7 @@ export default function OverviewView({ range, onNavigate }: OverviewProps) {
   const sources = getLeadSources(range);
   const pipeline = getQuotePipeline(range);
 
+  const recentLeads = getLeadLogs(range).slice(0, 6);
   const awaitingQuotes = pipeline.find((p) => p.status === "Awaiting Response");
   const declinedQuotes = pipeline.find((p) => p.status === "Declined");
   const slowRep = reps.find((r) => r.status === "critical");
@@ -270,6 +271,97 @@ export default function OverviewView({ range, onNavigate }: OverviewProps) {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Recent leads feed */}
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">Recent Leads</h3>
+              <p className="text-sm text-gray-500 mt-0.5">Latest inbound leads. Click to action in SimPro or Podium.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => onNavigate("leads")}
+            className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800"
+          >
+            View All Leads <ArrowRight className="h-3 w-3" />
+          </button>
+        </div>
+        <div className="divide-y divide-gray-50">
+          {recentLeads.map((lead) => {
+            const isOverdue = lead.humanResponseMin > 120;
+            const isUrgent = lead.status === "Awaiting Contact" || lead.status === "Awaiting Quote";
+            const responseHrs = lead.humanResponseMin >= 60
+              ? `${(lead.humanResponseMin / 60).toFixed(1)} hrs`
+              : `${lead.humanResponseMin} min`;
+            const responseColor = lead.humanResponseMin <= 60
+              ? "text-emerald-600"
+              : lead.humanResponseMin <= 120
+                ? "text-amber-600"
+                : "text-red-600";
+
+            return (
+              <div
+                key={lead.id}
+                className={`px-6 py-4 flex items-center justify-between ${
+                  isOverdue && isUrgent ? "bg-red-50/40" : "hover:bg-gray-50"
+                } transition-colors`}
+              >
+                <div className="flex items-center gap-4 min-w-0 flex-1">
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${
+                    isUrgent ? "bg-red-500 animate-pulse" :
+                    lead.status === "Accepted" || lead.status === "Job Booked" ? "bg-emerald-500" :
+                    "bg-blue-500"
+                  }`} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-gray-900 truncate">{lead.customerName}</p>
+                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                        lead.source === "Google Organic" ? "bg-blue-50 text-blue-600" :
+                        lead.source === "Facebook Ads" ? "bg-indigo-50 text-indigo-600" :
+                        lead.source === "Website Direct" ? "bg-emerald-50 text-emerald-600" :
+                        "bg-amber-50 text-amber-600"
+                      }`}>
+                        {lead.source}
+                      </span>
+                      {isUrgent && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">
+                          Needs Action
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {lead.jobType} &middot; {lead.type} &middot; Assigned to {lead.assignedTo}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-5 shrink-0">
+                  <div className="text-right">
+                    <p className={`text-xs font-semibold ${responseColor}`}>{responseHrs}</p>
+                    <p className="text-[10px] text-gray-400">human response</p>
+                  </div>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                    lead.status === "Accepted" || lead.status === "Job Booked" ? "bg-emerald-50 text-emerald-700" :
+                    lead.status === "Lost - No Response" || lead.status === "Awaiting Contact" ? "bg-red-50 text-red-700" :
+                    "bg-gray-100 text-gray-600"
+                  }`}>
+                    {lead.status}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <a href={lead.simproLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium">
+                      SimPro <ExternalLink className="h-3 w-3" />
+                    </a>
+                    <a href={lead.podiumLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 font-medium">
+                      Podium <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
