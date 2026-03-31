@@ -1,7 +1,8 @@
 "use client";
 
+import { ExternalLink } from "lucide-react";
 import type { DateRange } from "@/lib/data";
-import { getQuotePipeline, getKPIs } from "@/lib/data";
+import { getQuotePipeline, getKPIs, getQuoteLogs } from "@/lib/data";
 
 const pipelineColorMap: Record<string, { bg: string; bar: string; text: string }> = {
   gray: { bg: "bg-gray-50", bar: "bg-gray-400", text: "text-gray-700" },
@@ -19,6 +20,7 @@ function formatCurrency(value: number): string {
 export default function QuotesView({ range }: { range: DateRange }) {
   const pipeline = getQuotePipeline(range);
   const kpis = getKPIs(range);
+  const quoteLogs = getQuoteLogs(range);
   const totalValue = pipeline.reduce((s, p) => s + p.value, 0);
   const totalCount = pipeline.reduce((s, p) => s + p.count, 0);
   const wonStage = pipeline.find((p) => p.status === "Accepted");
@@ -113,6 +115,79 @@ export default function QuotesView({ range }: { range: DateRange }) {
           </div>
         </div>
       )}
+
+      {/* Quote log table */}
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="px-6 py-5 border-b border-gray-100">
+          <h3 className="text-base font-semibold text-gray-900">Quote Log</h3>
+          <p className="text-sm text-gray-500 mt-0.5">
+            All quotes for the selected period. Click links to open in SimPro or Xero.
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-100">
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quote #</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Days Since Sent</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rep</th>
+                <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Links</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {quoteLogs.map((quote) => (
+                <tr key={quote.id} className={`hover:bg-gray-50 transition-colors ${
+                  quote.status === "awaiting" && (quote.daysSinceSent || 0) > 7 ? "bg-amber-50/30" : ""
+                }`}>
+                  <td className="px-5 py-3 text-sm font-mono text-gray-900">#{quote.quoteNumber}</td>
+                  <td className="px-5 py-3 text-sm text-gray-500 whitespace-nowrap">{quote.date}</td>
+                  <td className="px-5 py-3 text-sm font-medium text-gray-900">{quote.customerName}</td>
+                  <td className="px-5 py-3 text-sm text-gray-600 max-w-xs truncate">{quote.description}</td>
+                  <td className="px-5 py-3 text-sm font-semibold text-gray-900 text-right">${quote.value.toLocaleString()}</td>
+                  <td className="px-5 py-3">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                      quote.status === "accepted" ? "bg-emerald-50 text-emerald-700" :
+                      quote.status === "declined" ? "bg-red-50 text-red-700" :
+                      quote.status === "awaiting" ? "bg-amber-50 text-amber-700" :
+                      quote.status === "sent" ? "bg-blue-50 text-blue-700" :
+                      "bg-gray-100 text-gray-600"
+                    }`}>
+                      {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3 text-sm text-right">
+                    {quote.daysSinceSent !== null ? (
+                      <span className={`font-medium ${(quote.daysSinceSent || 0) > 7 ? "text-amber-600" : "text-gray-500"}`}>
+                        {quote.daysSinceSent}d
+                      </span>
+                    ) : (
+                      <span className="text-gray-300">--</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3 text-sm text-gray-600">{quote.assignedTo}</td>
+                  <td className="px-5 py-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <a href={quote.simproLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium">
+                        SimPro <ExternalLink className="h-3 w-3" />
+                      </a>
+                      {quote.xeroLink && (
+                        <a href={quote.xeroLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-teal-600 hover:text-teal-800 font-medium">
+                          Xero <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* Revenue note */}
       <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">

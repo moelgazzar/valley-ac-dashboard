@@ -1,7 +1,8 @@
 "use client";
 
+import { ExternalLink } from "lucide-react";
 import type { DateRange } from "@/lib/data";
-import { getLeadSources, getKPIs } from "@/lib/data";
+import { getLeadSources, getKPIs, getLeadLogs } from "@/lib/data";
 
 const sourceColorMap: Record<string, { bar: string; bg: string; text: string }> = {
   blue: { bar: "bg-blue-500", bg: "bg-blue-50", text: "text-blue-700" },
@@ -10,9 +11,18 @@ const sourceColorMap: Record<string, { bar: string; bg: string; text: string }> 
   amber: { bar: "bg-amber-500", bg: "bg-amber-50", text: "text-amber-700" },
 };
 
+function formatResponseTime(minutes: number): { text: string; color: string } {
+  if (minutes < 60) return { text: `${minutes} min`, color: "text-emerald-600" };
+  const hrs = (minutes / 60).toFixed(1);
+  if (minutes <= 120) return { text: `${hrs} hrs`, color: "text-emerald-600" };
+  if (minutes <= 240) return { text: `${hrs} hrs`, color: "text-amber-600" };
+  return { text: `${hrs} hrs`, color: "text-red-600" };
+}
+
 export default function LeadsView({ range }: { range: DateRange }) {
   const sources = getLeadSources(range);
   const kpis = getKPIs(range);
+  const leadLogs = getLeadLogs(range);
   const totalLeads = sources.reduce((s, src) => s + src.count, 0);
   const avgResponse = kpis.find((k) => k.label === "Avg Response Time");
 
@@ -84,20 +94,78 @@ export default function LeadsView({ range }: { range: DateRange }) {
         </div>
       </div>
 
-      {/* Response time context */}
-      <div className="rounded-xl border border-blue-200 bg-blue-50 p-5">
-        <div className="flex gap-3">
-          <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-blue-800">Why Response Time Matters</p>
-            <p className="text-sm text-blue-700 mt-1">
-              Podium AI handles the initial contact instantly. The metric tracked here is
-              how long it takes a human team member to follow up after Podium qualifies the lead.
-              Industry data shows responding within 5 minutes makes you 21x more likely to
-              qualify. Your team average of {avgResponse?.value} means leads are cooling off
-              before anyone picks up the phone.
-            </p>
-          </div>
+      {/* Lead log table */}
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="px-6 py-5 border-b border-gray-100">
+          <h3 className="text-base font-semibold text-gray-900">Lead Log</h3>
+          <p className="text-sm text-gray-500 mt-0.5">
+            All leads for the selected period. Click links to open in SimPro or Podium.
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-100">
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Type</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
+                <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Human Response</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Links</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {leadLogs.map((lead) => {
+                const response = formatResponseTime(lead.humanResponseMin);
+                return (
+                  <tr key={lead.id} className={`hover:bg-gray-50 transition-colors ${lead.humanResponseMin > 240 ? "bg-red-50/30" : ""}`}>
+                    <td className="px-5 py-3 text-sm text-gray-500 whitespace-nowrap">{lead.date}</td>
+                    <td className="px-5 py-3">
+                      <p className="text-sm font-medium text-gray-900">{lead.customerName}</p>
+                      <p className="text-xs text-gray-400">{lead.type}</p>
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                        lead.source === "Google Organic" ? "bg-blue-50 text-blue-700" :
+                        lead.source === "Facebook Ads" ? "bg-indigo-50 text-indigo-700" :
+                        lead.source === "Website Direct" ? "bg-emerald-50 text-emerald-700" :
+                        "bg-amber-50 text-amber-700"
+                      }`}>
+                        {lead.source}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-sm text-gray-600">{lead.jobType}</td>
+                    <td className="px-5 py-3 text-sm text-gray-600">{lead.assignedTo}</td>
+                    <td className="px-5 py-3 text-right">
+                      <span className={`text-sm font-semibold ${response.color}`}>{response.text}</span>
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                        lead.status === "Accepted" || lead.status === "Job Booked" ? "bg-emerald-50 text-emerald-700" :
+                        lead.status === "Lost - No Response" ? "bg-red-50 text-red-700" :
+                        lead.status === "Awaiting Contact" ? "bg-red-50 text-red-700" :
+                        "bg-gray-100 text-gray-600"
+                      }`}>
+                        {lead.status}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center justify-center gap-2">
+                        <a href={lead.simproLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium">
+                          SimPro <ExternalLink className="h-3 w-3" />
+                        </a>
+                        <a href={lead.podiumLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 font-medium">
+                          Podium <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

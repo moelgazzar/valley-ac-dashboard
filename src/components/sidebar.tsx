@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   LayoutDashboard,
   Users,
@@ -7,8 +8,6 @@ import {
   FileText,
   AlertTriangle,
   ChevronsRight,
-  ChevronDown,
-  Snowflake,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -28,18 +27,20 @@ export default function Sidebar({ open, setOpen, selected, setSelected }: Sideba
       {/* Brand */}
       <div className="mb-6 border-b border-gray-200 pb-4">
         <div className="flex items-center rounded-md p-2">
-          <div className="flex items-center gap-3">
-            <div className="grid size-10 shrink-0 place-content-center rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 shadow-sm">
-              <Snowflake className="h-5 w-5 text-white" />
+          {open ? (
+            <Image
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/logo.png`}
+              alt="Valley Air Conditioning & Electrical"
+              width={200}
+              height={48}
+              className="h-10 w-auto object-contain"
+              priority
+            />
+          ) : (
+            <div className="grid size-10 shrink-0 place-content-center rounded-lg bg-blue-700 shadow-sm">
+              <span className="text-white font-bold text-sm">VA</span>
             </div>
-            {open && (
-              <div>
-                <span className="block text-sm font-semibold text-gray-900">Valley AC</span>
-                <span className="block text-xs text-gray-500">Sales Dashboard</span>
-              </div>
-            )}
-          </div>
-          {open && <ChevronDown className="ml-auto h-4 w-4 text-gray-400" />}
+          )}
         </div>
       </div>
 
