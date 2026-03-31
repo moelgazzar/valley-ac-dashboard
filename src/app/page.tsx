@@ -62,7 +62,7 @@ export default function Dashboard() {
 
           {/* Page content */}
           <main className="px-8 py-8">
-            {page === "overview" && <OverviewView range={range} />}
+            {page === "overview" && <OverviewView range={range} onNavigate={setPage} />}
             {page === "team" && <TeamView range={range} />}
             {page === "leads" && <LeadsView range={range} />}
             {page === "quotes" && <QuotesView range={range} />}

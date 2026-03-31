@@ -109,6 +109,7 @@ export interface Flag {
   category: "response-time" | "stale-quote" | "overdue-invoice" | "review" | "win";
   message: string;
   resolved: boolean;
+  links: { label: string; url: string; color: string }[];
 }
 
 export interface LeadSource {
@@ -160,14 +161,14 @@ const reps30d: RepPerformance[] = [
 ];
 
 const flags: Flag[] = [
-  { id: "1", date: "2026-03-31", severity: "critical", category: "response-time", message: "Dave Coleman: 3 leads uncontacted for 6+ hours today. Avg response time this week: 8.7 hrs.", resolved: false },
-  { id: "2", date: "2026-03-31", severity: "critical", category: "response-time", message: "Lead from Sarah M. (website, 9:41 AM): first human response at 12:08 PM. 2hr 27min gap.", resolved: false },
-  { id: "3", date: "2026-03-30", severity: "warning", category: "stale-quote", message: "Quote #4821 ($6,200, 14kW ducted): sent 8 days ago, no customer response. Podium auto-text sent day 3, no reply.", resolved: false },
-  { id: "4", date: "2026-03-30", severity: "warning", category: "overdue-invoice", message: "3 invoices overdue >14 days ($7,100 total). Podium reminder texts sent, no payment.", resolved: false },
-  { id: "5", date: "2026-03-29", severity: "success", category: "win", message: "Jake closed $8,400 ducted install (Quote #4819). Customer source: Google organic. Response time: 22 min.", resolved: true },
-  { id: "6", date: "2026-03-29", severity: "info", category: "review", message: "New Google review: 5 stars from recent install. Overall: 4.84 (2,364 reviews).", resolved: true },
-  { id: "7", date: "2026-03-28", severity: "warning", category: "stale-quote", message: "Quote #4815 ($4,800, split system x2): sent 12 days ago, customer said 'thinking about it' on day 5. No follow-up since.", resolved: false },
-  { id: "8", date: "2026-03-27", severity: "critical", category: "response-time", message: "Dave Coleman: lead from Facebook (3:12 PM Friday) not contacted until Monday 10:30 AM. 45+ hour gap.", resolved: false },
+  { id: "1", date: "2026-03-31", severity: "critical", category: "response-time", message: "Dave Coleman: 3 leads uncontacted for 6+ hours today. Avg response time this week: 8.7 hrs.", resolved: false, links: [{ label: "View Leads in SimPro", url: `${SIMPRO_BASE}/leads/?assignee=dave-coleman&status=uncontacted`, color: "blue" }, { label: "Podium Conversations", url: `${PODIUM_BASE}/inbox/?assignee=dave-coleman`, color: "purple" }] },
+  { id: "2", date: "2026-03-31", severity: "critical", category: "response-time", message: "Lead from Sarah M. (website, 9:41 AM): first human response at 12:08 PM. 2hr 27min gap.", resolved: false, links: [{ label: "Lead in SimPro", url: `${SIMPRO_BASE}/leads/8842`, color: "blue" }, { label: "Podium Chat", url: `${PODIUM_BASE}/conversations/c-8842`, color: "purple" }] },
+  { id: "3", date: "2026-03-30", severity: "warning", category: "stale-quote", message: "Quote #4821 ($6,200, 14kW ducted): sent 8 days ago, no customer response. Podium auto-text sent day 3, no reply.", resolved: false, links: [{ label: "Quote in SimPro", url: `${SIMPRO_BASE}/quotes/4821`, color: "blue" }, { label: "Podium Chat", url: `${PODIUM_BASE}/conversations/c-4821`, color: "purple" }] },
+  { id: "4", date: "2026-03-30", severity: "warning", category: "overdue-invoice", message: "3 invoices overdue >14 days ($7,100 total). Podium reminder texts sent, no payment.", resolved: false, links: [{ label: "Overdue in SimPro", url: `${SIMPRO_BASE}/invoices/?status=overdue&days=14`, color: "blue" }, { label: "Xero Aged Receivables", url: `${XERO_BASE}/Reports/AgedReceivables`, color: "teal" }] },
+  { id: "5", date: "2026-03-29", severity: "success", category: "win", message: "Jake closed $8,400 ducted install (Quote #4819). Customer source: Google organic. Response time: 22 min.", resolved: true, links: [{ label: "Quote in SimPro", url: `${SIMPRO_BASE}/quotes/4819`, color: "blue" }, { label: "Invoice in Xero", url: `${XERO_BASE}/AccountsReceivable/Edit/INV-2847`, color: "teal" }] },
+  { id: "6", date: "2026-03-29", severity: "info", category: "review", message: "New Google review: 5 stars from recent install. Overall: 4.84 (2,364 reviews).", resolved: true, links: [{ label: "View in Podium", url: `${PODIUM_BASE}/reviews`, color: "purple" }] },
+  { id: "7", date: "2026-03-28", severity: "warning", category: "stale-quote", message: "Quote #4815 ($4,800, split system x2): sent 12 days ago, customer said 'thinking about it' on day 5. No follow-up since.", resolved: false, links: [{ label: "Quote in SimPro", url: `${SIMPRO_BASE}/quotes/4815`, color: "blue" }, { label: "Podium Chat", url: `${PODIUM_BASE}/conversations/c-4815`, color: "purple" }] },
+  { id: "8", date: "2026-03-27", severity: "critical", category: "response-time", message: "Dave Coleman: lead from Facebook (3:12 PM Friday) not contacted until Monday 10:30 AM. 45+ hour gap.", resolved: false, links: [{ label: "Lead in SimPro", url: `${SIMPRO_BASE}/leads/8834`, color: "blue" }, { label: "Podium Chat", url: `${PODIUM_BASE}/conversations/c-8834`, color: "purple" }] },
 ];
 
 const leadSources7d: LeadSource[] = [

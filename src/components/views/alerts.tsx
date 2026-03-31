@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Clock, FileText, Star, Trophy } from "lucide-react";
+import { AlertTriangle, Clock, FileText, Star, Trophy, ExternalLink } from "lucide-react";
 import { getFlags } from "@/lib/data";
 
 const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -88,7 +88,24 @@ export default function AlertsView() {
                       </span>
                     </div>
                     <p className="text-sm text-gray-800 leading-relaxed">{flag.message}</p>
-                    <p className="text-xs text-gray-400 mt-2">{flag.date}</p>
+                    <div className="flex items-center gap-3 mt-2.5">
+                      {flag.links.map((link, i) => (
+                        <a
+                          key={i}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`inline-flex items-center gap-1 text-xs font-medium ${
+                            link.color === "blue" ? "text-blue-600 hover:text-blue-800" :
+                            link.color === "purple" ? "text-purple-600 hover:text-purple-800" :
+                            "text-teal-600 hover:text-teal-800"
+                          }`}
+                        >
+                          {link.label} <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ))}
+                      <span className="text-xs text-gray-400">{flag.date}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -116,7 +133,20 @@ export default function AlertsView() {
                       <p className="text-sm text-gray-600 line-through leading-relaxed">
                         {flag.message}
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">{flag.date}</p>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        {flag.links.map((link, i) => (
+                          <a
+                            key={i}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 font-medium"
+                          >
+                            {link.label} <ExternalLink className="h-3 w-3" />
+                          </a>
+                        ))}
+                        <span className="text-xs text-gray-400">{flag.date}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
